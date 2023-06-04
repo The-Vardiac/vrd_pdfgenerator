@@ -66,7 +66,8 @@ func consumer() {
 		counter := 0
 		for d := range msgs {
 			log.Println("Processing pdf ..")
-			readFile.Filename = "EdStatsData1.txt"
+			// readFile.Filename = "EdStatsData1.txt"
+			readFile.Filename = "EdStatsData2.txt"
 
 			generatePdf.Filename = string(d.Body) + "_" + strconv.Itoa(counter)
 			generatePdf.Text = readFile.ReadFile()
@@ -85,6 +86,16 @@ func consumer() {
 			}
 			
 			log.Println("PDF: " + generatePdf.Filename + " done.")
+
+			// send email to vrd_mailer
+			var sv_Vrd_mailer services.Vrd_mailer
+			sv_Vrd_mailer.Subject = "The Vardiac: your pdf document"
+			sv_Vrd_mailer.Body = "Filename " + generatePdf.Filename
+			sv_Vrd_mailer.MailTo = "lunba5th@gmail.com"
+			resp, err := sv_Vrd_mailer.Send()
+			if err != nil {
+				log.Println(resp + " | " + err.Error())
+			}
 
 			counter++
 		}

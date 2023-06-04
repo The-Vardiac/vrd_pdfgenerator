@@ -1,4 +1,4 @@
 files/pdfs/*
 files/text/*
-src/.env.sample
+.env
 !.gitkeep
