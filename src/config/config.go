@@ -14,8 +14,7 @@ func (cfg *Config) InitRabbitmq() {
 	rabbitmqConf.RabbitmqMakeConn()
 
 	// declare rabbitmq queue publisher
-	rabbitmqJob.DeclareQueue(RabbitmqChPubl, "queue2")
-
-	// declare rabbitmq queue consumer
-	// rabbitmqJob.DeclareQueue(RabbitmqChCons, "queue2")
+	rabbitmqJob.DeclareExchange(RabbitmqChPubl, "vardiac1", "direct")
+	rabbitmqJob.DeclareQueue(RabbitmqChPubl, "pdfgeneratorqueue")
+	rabbitmqJob.BindQueue(RabbitmqChPubl, jobs.Queue.Name, "pdfgeneratorqueuekey", "vardiac1")
 }

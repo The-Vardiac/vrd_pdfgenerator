@@ -12,6 +12,21 @@ var (
 
 type RabbitmqJob struct{}
 
+func (job *RabbitmqJob) DeclareExchange(ch *amqp.Channel, exchangeName string, exchangeType string) {
+	err := ch.ExchangeDeclare(
+		exchangeName,
+		exchangeType,
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		log.Panicf("%s: %s", "Failed to declare an exchange", err)
+	}
+}
+
 func (job *RabbitmqJob) DeclareQueue(ch *amqp.Channel, queueName string) {
 	var err error
 
@@ -25,5 +40,18 @@ func (job *RabbitmqJob) DeclareQueue(ch *amqp.Channel, queueName string) {
 	)
 	if err != nil {
 		log.Panicf("%s: %s", "Failed to declare a queue", err)
+	}
+}
+
+func (job *RabbitmqJob) BindQueue(ch *amqp.Channel, queueName string, routingKey string, exchangeName string) {
+	err := ch.QueueBind(
+		queueName,
+		routingKey,
+		exchangeName,
+		false,
+		nil,
+	)
+	if err != nil {
+		log.Panicf("%s: %s", "Failed to bind exchange and queue", err)
 	}
 }

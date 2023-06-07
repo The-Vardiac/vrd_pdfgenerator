@@ -24,8 +24,8 @@ func Request(c *gin.Context) {
 
 	body := timeString
 	err := config.RabbitmqChPubl.PublishWithContext(ctx, 
-		"",     // exchange
-		jobs.Queue.Name, // routing key
+		"vardiac1",     // exchange
+		"pdfgeneratorqueuekey", // routing key
 		false,  // mandatory
 		false,  // immediate
 		amqp.Publishing{
