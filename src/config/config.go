@@ -13,8 +13,12 @@ func (cfg *Config) InitRabbitmq() {
 	var rabbitmqConf RabbitmqConf
 	rabbitmqConf.RabbitmqMakeConn()
 
-	// declare rabbitmq queue publisher
+	// declare rabbitmq exchange
 	rabbitmqJob.DeclareExchange(RabbitmqChPubl, "vardiac1", "direct")
-	rabbitmqJob.DeclareQueue(RabbitmqChPubl, "pdfgeneratorqueue")
-	rabbitmqJob.BindQueue(RabbitmqChPubl, jobs.Queue.Name, "pdfgeneratorqueuekey", "vardiac1")
+	// declare queue and bind #1 (vrdpdfgenerator)
+	rabbitmqJob.DeclareQueue(RabbitmqChPubl, "vrdpdfgeneratorqueue")
+	rabbitmqJob.BindQueue(RabbitmqChPubl, jobs.Queue.Name, "vrdpdfgeneratorqueuekey", "vardiac1")
+	// declare queue and bind #2 (vrdmailer)
+	rabbitmqJob.DeclareQueue(RabbitmqChPubl, "vrdmailerqueue")
+	rabbitmqJob.BindQueue(RabbitmqChPubl, jobs.Queue.Name, "vrdmailerqueuekey", "vardiac1")
 }

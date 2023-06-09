@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
@@ -10,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	amqp "github.com/rabbitmq/amqp091-go"
 	config "github.com/williamluisan/vrd_pdfgenerator/config"
-	jobs "github.com/williamluisan/vrd_pdfgenerator/jobs"
+	"github.com/williamluisan/vrd_pdfgenerator/repository"
 	"github.com/williamluisan/vrd_pdfgenerator/services"
 )
 
@@ -21,11 +22,10 @@ func Request(c *gin.Context) {
 	// send to rabbitmq
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
-
 	body := timeString
 	err := config.RabbitmqChPubl.PublishWithContext(ctx, 
 		"vardiac1",     // exchange
-		"pdfgeneratorqueuekey", // routing key
+		"vrdpdfgeneratorqueuekey", // routing key
 		false,  // mandatory
 		false,  // immediate
 		amqp.Publishing{
@@ -47,7 +47,7 @@ func Request(c *gin.Context) {
 
 func consumer() {
 	msgs, err := config.RabbitmqChCons.Consume(
-		jobs.Queue.Name, // queue
+		"vrdpdfgeneratorqueue", // queue
 		"",     // consumer
 		false,   // auto-ack
 		false,  // exclusive
@@ -64,6 +64,7 @@ func consumer() {
 
 	go func() {
 		counter := 0
+		ctx, cancel := context.WithCancel(context.TODO())
 		for d := range msgs {
 			log.Println("Processing pdf ..")
 			// readFile.Filename = "EdStatsData1.txt"
@@ -87,17 +88,43 @@ func consumer() {
 			
 			log.Println("PDF: " + generatePdf.Filename + " done.")
 
-			// send email to vrd_mailer
-			var sv_Vrd_mailer services.Vrd_mailer
-			sv_Vrd_mailer.Subject = "The Vardiac: your pdf document"
-			sv_Vrd_mailer.Body = "Filename " + generatePdf.Filename
-			sv_Vrd_mailer.MailTo = "lunba5th@gmail.com"
-			resp, err := sv_Vrd_mailer.Send()
+			// send email to vrd_mailer (via rest)
+			// var sv_Vrd_mailer services.Vrd_mailer
+			// sv_Vrd_mailer.Subject = "The Vardiac: your pdf document"
+			// sv_Vrd_mailer.Body = "Filename " + generatePdf.Filename
+			// sv_Vrd_mailer.MailTo = "lunba5th@gmail.com"
+			// resp, err := sv_Vrd_mailer.Send()
+			// if err != nil {
+			// 	log.Println(resp + " | " + err.Error())
+			// }
+
+			// send to mailer queue
+			vrdMailerData := repository.Vrd_mailer{
+				Subject: "The Vardiac - Your PDF " + generatePdf.Filename,
+				Body: generatePdf.Filename,
+				MailTo: "lunba5th@gmail.com",
+			}
+			vrdMailerDataJson, _ := json.Marshal(vrdMailerData)
 			if err != nil {
-				log.Println(resp + " | " + err.Error())
+				log.Printf("%s: %s", "Failed to convert json", err)
+			}
+			body := string(vrdMailerDataJson)
+			err = config.RabbitmqChPubl.PublishWithContext(ctx, 
+				"vardiac1",     // exchange
+				"vrdmailerqueuekey", // routing key
+				false,  // mandatory
+				false,  // immediate
+				amqp.Publishing{
+					ContentType: "text/plain",
+					Body:        []byte(body),
+				},
+			)
+			if err != nil {
+				log.Panicf("%s: %s", "Failed to publish a message", err)
 			}
 
 			counter++
 		}
+		cancel()
 	}()
 }
