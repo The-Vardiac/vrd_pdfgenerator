@@ -22,3 +22,9 @@ func (cfg *Config) InitRabbitmq() {
 	rabbitmqJob.DeclareQueue(RabbitmqChPubl, "vrdmailerqueue")
 	rabbitmqJob.BindQueue(RabbitmqChPubl, jobs.Queue.Name, "vrdmailerqueuekey", "vardiac1")
 }
+
+func (cfg *Config) InitAWSS3() {
+	var awsS3Conf AmazonS3Conf
+
+	awsS3Conf.Configure()
+}

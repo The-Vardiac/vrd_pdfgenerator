@@ -19,12 +19,15 @@ func init() {
 	}
 
 	// initialize rabbitmq
-	config.InitRabbitmq()
+	// config.InitRabbitmq()
+
+	// initialize amazon S3
+	config.InitAWSS3()
 }
 
 func main() {
-	defer config.RabbitmqChPubl.Close()
-	defer config.RabbitmqChCons.Close()
+	// defer config.RabbitmqChPubl.Close()
+	// defer config.RabbitmqChCons.Close()
 
 	// initialize gin
 	router := gin.Default()
