@@ -5,9 +5,12 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/gin-gonic/gin"
 	amqp "github.com/rabbitmq/amqp091-go"
 	config "github.com/williamluisan/vrd_pdfgenerator/config"
@@ -16,6 +19,13 @@ import (
 )
 
 func Request(c *gin.Context) {
+	var AWSS3PutObjectInput services.AWSS3PutObjectInput
+	AWSS3PutObjectInput.Body = aws.ReadSeekCloser(strings.NewReader("../../20230609231736.311_3.pdf"))
+	AWSS3PutObjectInput.Bucket = aws.String("the-vardiac-bucket")
+	AWSS3PutObjectInput.Key = aws.String("test.pdf")
+	AWSS3PutObjectInput.PutObject()
+	os.Exit(1)
+
 	currentTime := time.Now()
 	timeString := currentTime.Format("20060102150405.000")
 
