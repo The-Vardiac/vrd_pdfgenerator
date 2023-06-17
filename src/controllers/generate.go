@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -19,16 +18,6 @@ import (
 )
 
 func Request(c *gin.Context) {
-	var readFile services.Readfile
-	readFile.Filename = "EdStatsData2.txt"
-	file := readFile.ReadFile()
-	var AWSS3PutObjectInput services.AWSS3PutObjectInput
-	AWSS3PutObjectInput.Body = aws.ReadSeekCloser(strings.NewReader(file))
-	AWSS3PutObjectInput.Bucket = aws.String("the-vardiac-bucket")
-	AWSS3PutObjectInput.Key = aws.String(readFile.Filename)
-	AWSS3PutObjectInput.PutObject()
-	os.Exit(1)
-
 	currentTime := time.Now()
 	timeString := currentTime.Format("20060102150405.000")
 
@@ -83,6 +72,7 @@ func consumer() {
 			// readFile.Filename = "EdStatsData1.txt"
 			readFile.Filename = "EdStatsData2.txt"
 
+			// generate the pdf
 			generatePdf.Filename = string(d.Body) + "_" + strconv.Itoa(counter)
 			generatePdf.Text = readFile.ReadFile()
 			err := generatePdf.GeneratePDF()
@@ -94,6 +84,17 @@ func consumer() {
 				// send email for fail generation
 				// ...
 			}
+
+			// upload the pdf to S3 bucket
+			var AWSS3PutObjectInput services.AWSS3PutObjectInput
+			AWSS3PutObjectInput.Body = aws.ReadSeekCloser(strings.NewReader(generatePdf.Text))
+			AWSS3PutObjectInput.Bucket = aws.String("the-vardiac-bucket")
+			AWSS3PutObjectInput.Key = aws.String(generatePdf.Filename)
+			_, err = AWSS3PutObjectInput.PutObject()
+			if err != nil {
+				log.Println("Failed to upload to S3: " + err.Error())
+			}
+			log.Println("S3 Bucket: " + generatePdf.Filename + " uploaded.")
 			
 			if err = d.Ack(false); err != nil {
 				log.Fatal("RabbitMQ: failed to acknowledge message in queue: " + string(d.Body))

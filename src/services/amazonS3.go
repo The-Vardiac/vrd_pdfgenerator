@@ -1,8 +1,6 @@
 package services
 
 import (
-	"fmt"
-
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/williamluisan/vrd_pdfgenerator/config"
@@ -11,7 +9,7 @@ import (
 
 type AWSS3PutObjectInput repository.AWSS3PutObjectInput
 
-func (obj *AWSS3PutObjectInput) PutObject() (s3.PutObjectOutput, error) {
+func (obj *AWSS3PutObjectInput) PutObject() (*s3.PutObjectOutput, error) {
 	var client = config.AwsS3Client
 
 	input := &s3.PutObjectInput{
@@ -25,17 +23,12 @@ func (obj *AWSS3PutObjectInput) PutObject() (s3.PutObjectOutput, error) {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			default:
-				fmt.Println(aerr.Error())
+				return result, err
 			}
 		} else {
-			// Print the error, cast err to awserr.Error to get the Code and
-			// Message from an error.
-			fmt.Println(err.Error())
+			return result, err
 		}
-		return s3.PutObjectOutput{}, nil
 	}
 
-	fmt.Println(result)
-
-	return s3.PutObjectOutput{}, nil
+	return result, nil
 }
