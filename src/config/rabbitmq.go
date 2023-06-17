@@ -10,6 +10,14 @@ import (
 var (
 	RabbitmqChPubl	*amqp.Channel
 	RabbitmqChCons	*amqp.Channel
+
+	RMQMainExchange = "vardiac1"
+
+	RMQPdfGeneratorQueue = "vrdpdfgeneratorqueue"
+	RMQPdfGeneratorQueueKey = "vrdpdfgeneratorqueuekey"
+
+	RMQMailerQueue = "vrdmailerqueue"
+	RMQMailerQueueKey = "vrdmailerqueuekey"
 )
 
 type RabbitmqConf struct{}

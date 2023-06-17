@@ -14,13 +14,13 @@ func (cfg *Config) InitRabbitmq() {
 	rabbitmqConf.RabbitmqMakeConn()
 
 	// declare rabbitmq exchange
-	rabbitmqJob.DeclareExchange(RabbitmqChPubl, "vardiac1", "direct")
+	rabbitmqJob.DeclareExchange(RabbitmqChPubl, RMQMainExchange, "direct")
 	// declare queue and bind #1 (vrdpdfgenerator)
-	rabbitmqJob.DeclareQueue(RabbitmqChPubl, "vrdpdfgeneratorqueue")
-	rabbitmqJob.BindQueue(RabbitmqChPubl, jobs.Queue.Name, "vrdpdfgeneratorqueuekey", "vardiac1")
+	rabbitmqJob.DeclareQueue(RabbitmqChPubl, RMQPdfGeneratorQueue)
+	rabbitmqJob.BindQueue(RabbitmqChPubl, jobs.Queue.Name, RMQPdfGeneratorQueueKey, RMQMainExchange)
 	// declare queue and bind #2 (vrdmailer)
-	rabbitmqJob.DeclareQueue(RabbitmqChPubl, "vrdmailerqueue")
-	rabbitmqJob.BindQueue(RabbitmqChPubl, jobs.Queue.Name, "vrdmailerqueuekey", "vardiac1")
+	rabbitmqJob.DeclareQueue(RabbitmqChPubl, RMQMailerQueue)
+	rabbitmqJob.BindQueue(RabbitmqChPubl, jobs.Queue.Name, RMQMailerQueueKey, RMQMainExchange)
 }
 
 func (cfg *Config) InitAWSS3() {

@@ -26,8 +26,8 @@ func Request(c *gin.Context) {
 	defer cancel()
 	body := timeString
 	err := config.RabbitmqChPubl.PublishWithContext(ctx, 
-		"vardiac1",     // exchange
-		"vrdpdfgeneratorqueuekey", // routing key
+		config.RMQMainExchange,     // exchange
+		config.RMQPdfGeneratorQueueKey, // routing key
 		false,  // mandatory
 		false,  // immediate
 		amqp.Publishing{
@@ -49,7 +49,7 @@ func Request(c *gin.Context) {
 
 func consumer() {
 	msgs, err := config.RabbitmqChCons.Consume(
-		"vrdpdfgeneratorqueue", // queue
+		config.RMQPdfGeneratorQueue, // queue
 		"",     // consumer
 		false,   // auto-ack
 		false,  // exclusive
@@ -124,8 +124,8 @@ func consumer() {
 			}
 			body := string(vrdMailerDataJson)
 			err = config.RabbitmqChPubl.PublishWithContext(ctx, 
-				"vardiac1",     // exchange
-				"vrdmailerqueuekey", // routing key
+				config.RMQMainExchange,     // exchange
+				config.RMQMailerQueueKey, // routing key
 				false,  // mandatory
 				false,  // immediate
 				amqp.Publishing{
