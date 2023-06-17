@@ -98,7 +98,7 @@ func (generate *Generate) RMQConsumer() {
 
 			// send to mailer queue
 			vrdMailerData := repository.Vrd_mailer{
-				Subject: "The Vardiac - Your PDF " + pdfGeneratedNameWithExtension,
+				Subject: "The Vardiac - Your PDF " + generatePdf.Filename,
 				Body:    pdfGeneratedNameWithExtension,
 				MailTo:  "lunba5th@gmail.com",
 			}
