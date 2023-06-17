@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strconv"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/go-pdf/fpdf"
@@ -80,8 +80,14 @@ func (generate *Generate) RMQConsumer() {
 
 			// upload the pdf to S3 bucket
 			log.Println("S3 Bucket: uploading ..")
+			readFile.Filename = pdfGeneratedNameWithExtension
+			file := readFile.GetPdfFileWithPath()
+			fileToUpload, err := os.Open(file)
+			if err != nil {
+				log.Printf("S3 Bucket: Couldn't open file %v to upload: %v\n", pdfGeneratedNameWithExtension, err)
+			}
 			var AWSS3PutObjectInput AWSS3PutObjectInput
-			AWSS3PutObjectInput.Body = aws.ReadSeekCloser(strings.NewReader(generatePdf.Text))
+			AWSS3PutObjectInput.Body = fileToUpload
 			AWSS3PutObjectInput.Bucket = aws.String("the-vardiac-bucket")
 			AWSS3PutObjectInput.Key = aws.String(pdfGeneratedNameWithExtension)
 			_, err = AWSS3PutObjectInput.PutObject()
@@ -89,11 +95,6 @@ func (generate *Generate) RMQConsumer() {
 				log.Println("Failed to upload to S3: " + err.Error())
 			}
 			log.Println("S3 Bucket: " + pdfGeneratedNameWithExtension + " uploaded.")
-
-			// acknowledge message
-			if err = d.Ack(false); err != nil {
-				log.Fatal("RabbitMQ: failed to acknowledge message in queue: " + string(d.Body))
-			}
 
 			// send to mailer queue
 			vrdMailerData := repository.Vrd_mailer{
@@ -118,6 +119,11 @@ func (generate *Generate) RMQConsumer() {
 			)
 			if err != nil {
 				log.Panicf("%s: %s", "Failed to publish a message", err)
+			}
+
+			// acknowledge message
+			if err = d.Ack(false); err != nil {
+				log.Fatal("RabbitMQ: failed to acknowledge message in queue: " + string(d.Body))
 			}
 
 			counter++

@@ -1,9 +1,9 @@
 package repository
 
-import "github.com/aws/aws-sdk-go/aws"
+import "os"
 
 type AWSS3PutObjectInput struct {
-	Body aws.ReaderSeekerCloser
+	Body   *os.File
 	Bucket *string
-	Key	*string
+	Key    *string
 }

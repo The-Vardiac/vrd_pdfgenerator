@@ -42,7 +42,7 @@ func (readfile *Readfile) ReadPdfFile() string {
 	return string(content)
 }
 
-func (readfile *Readfile) GetPdfFilePath() string {
+func (readfile *Readfile) GetPdfFileWithPath() string {
 	_, current_folder, _, _ := runtime.Caller(0)
 	config_path := filepath.Dir(current_folder)
 	absolute_path := config_path + pdfFileAbsolutePath
