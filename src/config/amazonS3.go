@@ -11,6 +11,8 @@ import (
 )
 
 var (
+	AwsS3MainBucket = "the-vardiac-bucket"
+
 	AwsS3Session *session.Session
 	AwsS3Client *s3.S3
 )

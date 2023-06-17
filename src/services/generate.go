@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"sync"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/go-pdf/fpdf"
@@ -54,8 +55,10 @@ func (generate *Generate) RMQConsumer() {
 
 	var readFile Readfile
 	var generatePdf Generate
-
+	
 	go func() {
+		var syncWaitGroup sync.WaitGroup
+
 		counter := 0
 		ctx, cancel := context.WithCancel(context.TODO())
 		for d := range msgs {
@@ -64,38 +67,52 @@ func (generate *Generate) RMQConsumer() {
 			readFile.Filename = "EdStatsData2.txt"
 
 			// generate the pdf
-			generatePdf.Filename = string(d.Body) + "_" + strconv.Itoa(counter)
-			generatePdf.Text = readFile.ReadFile()
-			ext, err := generatePdf.GeneratePDF()
-			if err != nil {
-				log.Println("PDF: failed to generate the pdf file " + generatePdf.Filename)
+			pdfGeneratedNameWithExtension := ""
+			syncWaitGroup.Add(1)
+			go func() {
+				defer syncWaitGroup.Done()
 
-				// ...
-				// retry to generate or
-				// send email for fail generation
-				// ...
-			}
-			pdfGeneratedNameWithExtension := generatePdf.Filename + ext
-			log.Println("PDF: " + pdfGeneratedNameWithExtension + " done.")
+				generatePdf.Filename = string(d.Body) + "_" + strconv.Itoa(counter)
+				generatePdf.Text = readFile.ReadFile()
+				ext, err := generatePdf.GeneratePDF()
+				if err != nil {
+					log.Println("PDF: failed to generate the pdf file " + generatePdf.Filename)
 
-			// upload the pdf to S3 bucket
-			log.Println("S3 Bucket: uploading ..")
-			readFile.Filename = pdfGeneratedNameWithExtension
-			file := readFile.GetPdfFileWithPath()
-			fileToUpload, err := os.Open(file)
-			if err != nil {
-				log.Printf("S3 Bucket: Couldn't open file %v to upload: %v\n", pdfGeneratedNameWithExtension, err)
-			}
-			var AWSS3PutObjectInput AWSS3PutObjectInput
-			AWSS3PutObjectInput.Body = fileToUpload
-			AWSS3PutObjectInput.Bucket = aws.String("the-vardiac-bucket")
-			AWSS3PutObjectInput.Key = aws.String(pdfGeneratedNameWithExtension)
-			_, err = AWSS3PutObjectInput.PutObject()
-			if err != nil {
-				log.Println("Failed to upload to S3: " + err.Error())
-			}
-			log.Println("S3 Bucket: " + pdfGeneratedNameWithExtension + " uploaded.")
+					// ...
+					// retry to generate or
+					// send email for fail generation
+					// ...
+				}
+				pdfGeneratedNameWithExtension = generatePdf.Filename + ext
+				log.Println("PDF: " + pdfGeneratedNameWithExtension + " done.")
+			}()
+			syncWaitGroup.Wait()
 
+			syncWaitGroup.Add(1)
+			go func() {
+				defer syncWaitGroup.Done()
+
+				// upload the pdf to S3 bucket
+				log.Println("S3 Bucket: uploading ..")
+				readFile.Filename = pdfGeneratedNameWithExtension
+				file := readFile.GetPdfFileWithPath()
+				fileToUpload, err := os.Open(file)
+				if err != nil {
+					log.Printf("S3 Bucket: Couldn't open file %v to upload: %v\n", pdfGeneratedNameWithExtension, err)
+				}
+				var AWSS3PutObjectInput AWSS3PutObjectInput
+				AWSS3PutObjectInput.Body = fileToUpload
+				AWSS3PutObjectInput.Bucket = aws.String(config.AwsS3MainBucket)
+				AWSS3PutObjectInput.Key = aws.String(pdfGeneratedNameWithExtension)
+				result, err := AWSS3PutObjectInput.PutObject()
+				if err != nil {
+					log.Println("Failed to upload to S3: " + err.Error())
+				}
+				log.Println("S3 Bucket: " + pdfGeneratedNameWithExtension + " uploaded.")
+				log.Println(result)
+			}()
+			syncWaitGroup.Wait()
+			
 			// send to mailer queue
 			vrdMailerData := repository.Vrd_mailer{
 				Subject: "The Vardiac - Your PDF " + generatePdf.Filename,
@@ -130,4 +147,5 @@ func (generate *Generate) RMQConsumer() {
 		}
 		cancel()
 	}()
+
 }
