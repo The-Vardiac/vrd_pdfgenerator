@@ -19,10 +19,13 @@ import (
 )
 
 func Request(c *gin.Context) {
+	var readFile services.Readfile
+	readFile.Filename = "EdStatsData2.txt"
+	file := readFile.ReadFile()
 	var AWSS3PutObjectInput services.AWSS3PutObjectInput
-	AWSS3PutObjectInput.Body = aws.ReadSeekCloser(strings.NewReader("../../20230609231736.311_3.pdf"))
+	AWSS3PutObjectInput.Body = aws.ReadSeekCloser(strings.NewReader(file))
 	AWSS3PutObjectInput.Bucket = aws.String("the-vardiac-bucket")
-	AWSS3PutObjectInput.Key = aws.String("test.pdf")
+	AWSS3PutObjectInput.Key = aws.String(readFile.Filename)
 	AWSS3PutObjectInput.PutObject()
 	os.Exit(1)
 
