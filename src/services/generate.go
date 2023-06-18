@@ -15,6 +15,8 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/williamluisan/vrd_pdfgenerator/config"
 	"github.com/williamluisan/vrd_pdfgenerator/repository"
+	serviceMail "github.com/williamluisan/vrd_pdfgenerator/services/mail"
+	"github.com/williamluisan/vrd_pdfgenerator/utils"
 )
 
 type Generate repository.Generate
@@ -104,19 +106,26 @@ func (generate *Generate) RMQConsumer() {
 				AWSS3PutObjectInput.Body = fileToUpload
 				AWSS3PutObjectInput.Bucket = aws.String(config.AwsS3MainBucket)
 				AWSS3PutObjectInput.Key = aws.String(pdfGeneratedNameWithExtension)
-				result, err := AWSS3PutObjectInput.PutObject()
+				_, err = AWSS3PutObjectInput.PutObject()
 				if err != nil {
 					log.Println("Failed to upload to S3: " + err.Error())
 				}
 				log.Println("S3 Bucket: " + pdfGeneratedNameWithExtension + " uploaded.")
-				log.Println(result)
 			}()
 			syncWaitGroup.Wait()
 			
 			// send to mailer queue
+			var AWSS3Object AWSS3Object
+			var generateFileEmailTemplate serviceMail.GenerateFileEmailTemplate
+			generateFileEmailTemplate.UserName = "Lunba5th" 
+			generateFileEmailTemplate.Filename = pdfGeneratedNameWithExtension
+			generateFileEmailTemplate.FileUrl = AWSS3Object.GetObjectUrl() + pdfGeneratedNameWithExtension
+			generateFileEmailTemplate.GetGenerateFileHTMLEmailTemplate()
+			emailTemplate := generateFileEmailTemplate.GetGenerateFileHTMLEmailTemplate()
+			emailTemplateRendered := utils.HTMLTemplateParser(emailTemplate)
 			vrdMailerData := repository.Vrd_mailer{
 				Subject: "The Vardiac - Your PDF " + generatePdf.Filename,
-				Body:    pdfGeneratedNameWithExtension,
+				Body:    emailTemplateRendered,
 				MailTo:  "lunba5th@gmail.com",
 			}
 			vrdMailerDataJson, _ := json.Marshal(vrdMailerData)
@@ -147,5 +156,4 @@ func (generate *Generate) RMQConsumer() {
 		}
 		cancel()
 	}()
-
 }

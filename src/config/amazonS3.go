@@ -12,6 +12,7 @@ import (
 
 var (
 	AwsS3MainBucket = "the-vardiac-bucket"
+	AwsS3RegionUrl = "ap-southeast-1"
 
 	AwsS3Session *session.Session
 	AwsS3Client *s3.S3

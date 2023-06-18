@@ -7,6 +7,14 @@ import (
 	"github.com/williamluisan/vrd_pdfgenerator/repository"
 )
 
+type AWSS3Object repository.AWSS3Object
+
+func (obj *AWSS3Object) GetObjectUrl() (url string) {
+	url = "https://" + config.AwsS3MainBucket + ".s3." + config.AwsS3RegionUrl + ".amazonaws.com/"
+
+	return url
+}
+
 type AWSS3PutObjectInput repository.AWSS3PutObjectInput
 
 func (obj *AWSS3PutObjectInput) PutObject() (*s3.PutObjectOutput, error) {
