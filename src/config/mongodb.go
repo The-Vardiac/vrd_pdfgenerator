@@ -13,6 +13,8 @@ import (
 var (
 	MongoDBClient     *mongo.Client
 	MongoDBConnCancel context.CancelFunc
+
+	MongoTheVardiacDB *mongo.Database
 )
 
 type MongoDB struct{}
@@ -26,4 +28,7 @@ func (cfg *MongoDB) MongoDBMakeConn() {
 
 	MongoDBClient = client
 	MongoDBConnCancel = cancel
+
+	// The vardiac db instance
+	MongoTheVardiacDB = client.Database("thevardiac")
 }
