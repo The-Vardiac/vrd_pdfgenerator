@@ -28,3 +28,9 @@ func (cfg *Config) InitAWSS3() {
 
 	awsS3Conf.Configure()
 }
+
+func (cfg *Config) InitMongoDB() {
+	var mongoDB MongoDB
+
+	mongoDB.MongoDBMakeConn()
+}

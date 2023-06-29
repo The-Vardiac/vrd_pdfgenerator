@@ -23,11 +23,15 @@ func init() {
 
 	// initialize amazon S3
 	config.InitAWSS3()
+
+	// initialize mongo DB
+	config.InitMongoDB()
 }
 
 func main() {
 	defer config.RabbitmqChPubl.Close()
 	defer config.RabbitmqChCons.Close()
+	defer config.MongoDBConnCancel()
 
 	// initialize gin
 	router := gin.Default()
