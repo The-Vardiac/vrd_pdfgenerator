@@ -1,0 +1,12 @@
+[
+    {
+        "delete": "aws_s3_bucket",
+        "deletes": [
+            {
+                "q": {
+                    "_id": "64a007817db048f6a0ec8bb7"
+                }
+            }
+        ]
+    }
+]

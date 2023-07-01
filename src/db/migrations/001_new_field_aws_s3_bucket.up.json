@@ -1,0 +1,10 @@
+[
+    {
+        "insert": "aws_s3_bucket",
+        "documents": [
+            {
+                "test": "b"
+            }
+        ]
+    }
+]
