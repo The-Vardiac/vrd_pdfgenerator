@@ -4,8 +4,9 @@
         "deletes": [
             {
                 "q": {
-                    "test": "a"
-                }
+                    "test": "b"
+                },
+                "limit": 0
             }
         ]
     }

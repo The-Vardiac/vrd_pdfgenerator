@@ -4,8 +4,9 @@
         "deletes": [
             {
                 "q": {
-                    "_id": "64a007817db048f6a0ec8bb7"
-                }
+                    "test": "c"
+                },
+                "limit": 0
             }
         ]
     }

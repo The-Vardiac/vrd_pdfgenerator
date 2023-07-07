@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"os"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/mongodb"
@@ -24,6 +25,16 @@ func init() {
 }
 
 func main() {
+	args := os.Args
+	argsLen := len(args)
+	if argsLen < 2 {
+		log.Fatal("Usage: go run main.go (up|down)")
+	}
+	if (args[1] != "up") && (args[1] != "down") {
+		log.Fatal("Usage: go run main.go (up|down)")
+	}
+	migrateCommand := args[1]
+
 	migrateCollections()
 
 	driver, err := mongodb.WithInstance(config.MongoDBClient, &mongodb.Config{
@@ -39,7 +50,12 @@ func main() {
 		log.Fatal("golang-migrate: " + err.Error())
 	}
 
-	m.Down()
+	if migrateCommand == "up" {
+		m.Up()
+	}
+	if migrateCommand == "down" {
+		m.Down()
+	}
 }
 
 func migrateCollections() {
