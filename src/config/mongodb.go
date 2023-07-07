@@ -17,6 +17,10 @@ var (
 	MongoTheVardiacDB *mongo.Database
 )
 
+const (
+	COLL_AWS_S3_BUCKET = "aws_s3_bucket"
+)
+
 type MongoDB struct{}
 
 func (cfg *MongoDB) MongoDBMakeConn() {

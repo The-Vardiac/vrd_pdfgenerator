@@ -106,11 +106,26 @@ func (generate *Generate) RMQConsumer() {
 				AWSS3PutObjectInput.Body = fileToUpload
 				AWSS3PutObjectInput.Bucket = aws.String(config.AwsS3MainBucket)
 				AWSS3PutObjectInput.Key = aws.String(pdfGeneratedNameWithExtension)
-				_, err = AWSS3PutObjectInput.PutObject()
+				putObjectOutput, err := AWSS3PutObjectInput.PutObject()
 				if err != nil {
 					log.Println("Failed to upload to S3: " + err.Error())
 				}
 				log.Println("S3 Bucket: " + pdfGeneratedNameWithExtension + " uploaded.")
+
+				// store bucket data to mongodb
+				coll := config.MongoTheVardiacDB.Collection(config.COLL_AWS_S3_BUCKET)
+				_, err = coll.InsertOne(context.TODO(), struct{
+					Filename string
+					Etag *string
+					Versionid *string
+				}{
+					Filename: pdfGeneratedNameWithExtension,
+					Etag: putObjectOutput.ETag,
+					Versionid: putObjectOutput.VersionId,
+				})
+				if err != nil {
+					log.Println("Failed to store to mongodb: " + err.Error())
+				}
 			}()
 			syncWaitGroup.Wait()
 			
